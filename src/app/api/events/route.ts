@@ -51,7 +51,15 @@ export async function POST(request: Request) {
     });
 
     // Build response with URLs (don't expose adminToken directly)
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+    // Use request headers to determine the actual host for correct URL generation
+    const headers = request.headers;
+    const host = headers.get('host');
+    const protocol = headers.get('x-forwarded-proto') || 'https';
+
+    // Determine base URL: use request host in production, fall back to env var or localhost
+    const baseUrl = host
+      ? `${protocol}://${host}`
+      : process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
 
     return NextResponse.json({
       adminUrl: `${baseUrl}/e/${event.id}/${event.adminToken}`,
