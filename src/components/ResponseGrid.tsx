@@ -2,19 +2,7 @@
 
 import { useState } from 'react';
 import { ResponseCell } from './ResponseCell';
-
-type Value = 'yes' | 'no' | 'maybe' | null;
-
-interface Weekend {
-  start: string;
-  end: string;
-}
-
-interface Attendee {
-  id: string;
-  name: string;
-  responses: Record<string, string>;
-}
+import type { ResponseValue, Weekend, Attendee } from '@/types';
 
 interface Props {
   weekends: Weekend[];
@@ -31,12 +19,12 @@ function formatWeekend(weekend: Weekend): string {
 }
 
 export function ResponseGrid({ weekends, attendees, currentAttendeeId, currentToken }: Props) {
-  const [responses, setResponses] = useState<Record<string, Record<string, Value>>>(() => {
-    const initial: Record<string, Record<string, Value>> = {};
+  const [responses, setResponses] = useState<Record<string, Record<string, ResponseValue>>>(() => {
+    const initial: Record<string, Record<string, ResponseValue>> = {};
     attendees.forEach(a => {
       initial[a.id] = {};
       Object.entries(a.responses || {}).forEach(([key, value]) => {
-        initial[a.id][key] = value as Value;
+        initial[a.id][key] = value as ResponseValue;
       });
     });
     return initial;
@@ -44,7 +32,20 @@ export function ResponseGrid({ weekends, attendees, currentAttendeeId, currentTo
 
   const [saving, setSaving] = useState(false);
 
-  const handleResponseChange = async (attendeeId: string, weekendIndex: number, value: Value) => {
+  const revertResponse = (attendeeId: string, weekendIndex: number) => {
+    const attendee = attendees.find(a => a.id === attendeeId);
+    if (attendee) {
+      setResponses(prev => ({
+        ...prev,
+        [attendeeId]: {
+          ...prev[attendeeId],
+          [String(weekendIndex)]: (attendee.responses[String(weekendIndex)] as ResponseValue) || null,
+        },
+      }));
+    }
+  };
+
+  const handleResponseChange = async (attendeeId: string, weekendIndex: number, value: ResponseValue) => {
     if (attendeeId !== currentAttendeeId) return;
 
     // Optimistic update
@@ -69,30 +70,10 @@ export function ResponseGrid({ weekends, attendees, currentAttendeeId, currentTo
       });
 
       if (!response.ok) {
-        // Revert on error
-        const attendee = attendees.find(a => a.id === attendeeId);
-        if (attendee) {
-          setResponses(prev => ({
-            ...prev,
-            [attendeeId]: {
-              ...prev[attendeeId],
-              [String(weekendIndex)]: (attendee.responses[String(weekendIndex)] as Value) || null,
-            },
-          }));
-        }
+        revertResponse(attendeeId, weekendIndex);
       }
     } catch {
-      // Revert on error
-      const attendee = attendees.find(a => a.id === attendeeId);
-      if (attendee) {
-        setResponses(prev => ({
-          ...prev,
-          [attendeeId]: {
-            ...prev[attendeeId],
-            [String(weekendIndex)]: (attendee.responses[String(weekendIndex)] as Value) || null,
-          },
-        }));
-      }
+      revertResponse(attendeeId, weekendIndex);
     } finally {
       setSaving(false);
     }

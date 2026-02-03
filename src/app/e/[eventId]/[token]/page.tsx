@@ -26,13 +26,19 @@ export default async function EventPage({ params }: PageProps) {
 
   const weekends = event.weekends as Array<{ start: string; end: string }>;
 
-  // Transform attendees to have properly typed responses
-  const attendeesWithResponses = event.attendees.map(a => ({
+  // Transform attendees for ResponseGrid - NO tokens exposed
+  const attendeesForGrid = event.attendees.map(a => ({
+    id: a.id,
+    name: a.name,
+    responses: (a.responses as Record<string, string>) || {},
+  }));
+
+  // Transform attendees for InviteLinks (admin only) - WITH tokens
+  const attendeesWithTokens = isAdmin ? event.attendees.map(a => ({
     id: a.id,
     name: a.name,
     token: a.token,
-    responses: (a.responses as Record<string, string>) || {},
-  }));
+  })) : [];
 
   return (
     <main className="max-w-4xl mx-auto p-4">
@@ -41,7 +47,7 @@ export default async function EventPage({ params }: PageProps) {
 
       <ResponseGrid
         weekends={weekends}
-        attendees={attendeesWithResponses}
+        attendees={attendeesForGrid}
         currentAttendeeId={currentAttendee?.id}
         currentToken={token}
       />
@@ -49,7 +55,7 @@ export default async function EventPage({ params }: PageProps) {
       {isAdmin && (
         <InviteLinks
           eventId={event.id}
-          attendees={attendeesWithResponses}
+          attendees={attendeesWithTokens}
         />
       )}
 

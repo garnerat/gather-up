@@ -1,22 +1,19 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { updateResponseSchema } from '@/lib/validation';
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
 
-    const { token, weekendIndex, value } = body;
+    // Validate input with Zod
+    const parsed = updateResponseSchema.safeParse(body);
+    if (!parsed.success) {
+      const firstError = parsed.error.issues[0];
+      return NextResponse.json({ error: firstError.message }, { status: 400 });
+    }
 
-    // Validate inputs
-    if (!token || typeof token !== 'string') {
-      return NextResponse.json({ error: 'Token required' }, { status: 400 });
-    }
-    if (typeof weekendIndex !== 'number' || weekendIndex < 0) {
-      return NextResponse.json({ error: 'Valid weekendIndex required' }, { status: 400 });
-    }
-    if (!['yes', 'no', 'maybe', null].includes(value)) {
-      return NextResponse.json({ error: 'Value must be yes, no, maybe, or null' }, { status: 400 });
-    }
+    const { token, weekendIndex, value } = parsed.data;
 
     // Find attendee and their event
     const attendee = await prisma.attendee.findUnique({

@@ -1,11 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-
-interface Weekend {
-  start: string;
-  end: string;
-}
+import type { Weekend } from '@/types';
 
 interface EventFormProps {
   onSuccess: (data: {

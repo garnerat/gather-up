@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { EventForm } from '@/components/EventForm';
+import { copyToClipboard } from '@/lib/clipboard';
 
 interface SuccessData {
   adminUrl: string;
@@ -10,6 +11,15 @@ interface SuccessData {
 
 export default function Home() {
   const [successData, setSuccessData] = useState<SuccessData | null>(null);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  const handleCopy = async (id: string, text: string) => {
+    const success = await copyToClipboard(text);
+    if (success) {
+      setCopiedId(id);
+      setTimeout(() => setCopiedId(null), 2000);
+    }
+  };
 
   if (successData) {
     return (
@@ -28,10 +38,10 @@ export default function Home() {
             {successData.adminUrl}
           </code>
           <button
-            onClick={() => navigator.clipboard.writeText(successData.adminUrl)}
+            onClick={() => handleCopy('admin', successData.adminUrl)}
             className="mt-2 px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700"
           >
-            Copy Link
+            {copiedId === 'admin' ? 'Copied!' : 'Copy Link'}
           </button>
         </div>
 
@@ -47,10 +57,10 @@ export default function Home() {
                 {link.url}
               </code>
               <button
-                onClick={() => navigator.clipboard.writeText(link.url)}
+                onClick={() => handleCopy(`attendee-${index}`, link.url)}
                 className="px-2 py-1 text-blue-600 text-sm border border-blue-300 rounded hover:bg-blue-50"
               >
-                Copy
+                {copiedId === `attendee-${index}` ? 'Copied!' : 'Copy'}
               </button>
             </div>
           ))}

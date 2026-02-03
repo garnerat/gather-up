@@ -61,7 +61,7 @@ describe('POST /api/responses', () => {
     expect(response.status).toBe(400);
 
     const data = await response.json();
-    expect(data.error).toBe('Token required');
+    expect(data.error).toContain('string');  // Zod error for missing string
   });
 
   it('rejects invalid token', async () => {
@@ -143,7 +143,7 @@ describe('POST /api/responses', () => {
     expect(response.status).toBe(400);
 
     const data = await response.json();
-    expect(data.error).toBe('Value must be yes, no, maybe, or null');
+    expect(data.error).toContain('yes');  // Zod error mentions valid options
   });
 
   it('accepts null value to clear response', async () => {

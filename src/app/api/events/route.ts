@@ -1,40 +1,19 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { createEventSchema } from '@/lib/validation';
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
 
-    // Input validation with length limits
-    const title = body.title?.trim();
-    const hostName = body.hostName?.trim();
-    const weekends = body.weekends;
-    const attendees = body.attendees;
+    // Validate input with Zod
+    const parsed = createEventSchema.safeParse(body);
+    if (!parsed.success) {
+      const firstError = parsed.error.issues[0];
+      return NextResponse.json({ error: firstError.message }, { status: 400 });
+    }
 
-    if (!title) {
-      return NextResponse.json({ error: 'Title required' }, { status: 400 });
-    }
-    if (title.length > 200) {
-      return NextResponse.json({ error: 'Title too long (max 200)' }, { status: 400 });
-    }
-    if (!hostName) {
-      return NextResponse.json({ error: 'Host name required' }, { status: 400 });
-    }
-    if (hostName.length > 100) {
-      return NextResponse.json({ error: 'Host name too long (max 100)' }, { status: 400 });
-    }
-    if (!weekends?.length) {
-      return NextResponse.json({ error: 'At least one weekend required' }, { status: 400 });
-    }
-    if (weekends.length > 20) {
-      return NextResponse.json({ error: 'Too many weekends (max 20)' }, { status: 400 });
-    }
-    if (!attendees?.length) {
-      return NextResponse.json({ error: 'At least one attendee required' }, { status: 400 });
-    }
-    if (attendees.length > 50) {
-      return NextResponse.json({ error: 'Too many attendees (max 50)' }, { status: 400 });
-    }
+    const { title, hostName, weekends, attendees } = parsed.data;
 
     const event = await prisma.event.create({
       data: {
@@ -42,9 +21,7 @@ export async function POST(request: Request) {
         hostName,
         weekends,
         attendees: {
-          create: attendees.map((name: string) => ({
-            name: name.trim().slice(0, 100), // Limit name length
-          })),
+          create: attendees.map((name) => ({ name })),
         },
       },
       include: { attendees: true },

@@ -1,20 +1,28 @@
 'use client';
 
-interface Attendee {
-  id: string;
-  name: string;
-  token: string;
-}
+import { useState } from 'react';
+import { copyToClipboard } from '@/lib/clipboard';
+import type { AttendeeWithToken } from '@/types';
 
 interface Props {
   eventId: string;
-  attendees: Attendee[];
+  attendees: Pick<AttendeeWithToken, 'id' | 'name' | 'token'>[];
 }
 
 export function InviteLinks({ eventId, attendees }: Props) {
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+
   const baseUrl = typeof window !== 'undefined'
     ? window.location.origin
     : process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+
+  const handleCopy = async (id: string, url: string) => {
+    const success = await copyToClipboard(url);
+    if (success) {
+      setCopiedId(id);
+      setTimeout(() => setCopiedId(null), 2000);
+    }
+  };
 
   return (
     <div className="mt-8 p-4 bg-gray-100 rounded">
@@ -28,10 +36,10 @@ export function InviteLinks({ eventId, attendees }: Props) {
               {url}
             </code>
             <button
-              onClick={() => navigator.clipboard.writeText(url)}
+              onClick={() => handleCopy(a.id, url)}
               className="px-2 py-1 text-blue-600 text-sm border border-blue-300 rounded hover:bg-blue-50"
             >
-              Copy
+              {copiedId === a.id ? 'Copied!' : 'Copy'}
             </button>
           </div>
         );

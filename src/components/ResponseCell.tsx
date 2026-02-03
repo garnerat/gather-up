@@ -1,10 +1,10 @@
 'use client';
 
-type Value = 'yes' | 'no' | 'maybe' | null;
+import type { ResponseValue } from '@/types';
 
 interface Props {
-  value: Value;
-  onChange?: (value: Value) => void;
+  value: ResponseValue;
+  onChange?: (value: ResponseValue) => void;
   disabled?: boolean;
 }
 
@@ -16,7 +16,7 @@ const styles: Record<string, string> = {
 };
 
 export function ResponseCell({ value, onChange, disabled }: Props) {
-  const cycle: Value[] = [null, 'yes', 'maybe', 'no'];
+  const cycle: ResponseValue[] = [null, 'yes', 'maybe', 'no'];
 
   const handleClick = () => {
     if (disabled || !onChange) return;
