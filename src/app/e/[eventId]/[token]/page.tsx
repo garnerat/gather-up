@@ -4,6 +4,9 @@ import { ResponseGrid } from '@/components/ResponseGrid';
 import { RefreshButton } from './RefreshButton';
 import { InviteLinks } from './InviteLinks';
 
+// Disable caching so router.refresh() fetches fresh data
+export const dynamic = 'force-dynamic';
+
 interface PageProps {
   params: Promise<{ eventId: string; token: string }>;
 }
