@@ -50,6 +50,7 @@ function formatWeekend(weekend: Weekend): string {
 export function EventForm({ onSuccess }: EventFormProps) {
   const [title, setTitle] = useState('');
   const [hostName, setHostName] = useState('');
+  const [hostWantsToVote, setHostWantsToVote] = useState(false);
   const [weekends, setWeekends] = useState<Weekend[]>([]);
   const [attendeesInput, setAttendeesInput] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -88,7 +89,12 @@ export function EventForm({ onSuccess }: EventFormProps) {
       .map((name) => name.trim())
       .filter((name) => name.length > 0);
 
-    if (attendees.length === 0) {
+    // Include host in attendees if they want to vote
+    const allAttendees = hostWantsToVote
+      ? [hostName, ...attendees]
+      : attendees;
+
+    if (allAttendees.length === 0) {
       setError('Please add at least one attendee');
       setIsSubmitting(false);
       return;
@@ -112,7 +118,7 @@ export function EventForm({ onSuccess }: EventFormProps) {
           title,
           hostName,
           weekends: allWeekends,
-          attendees,
+          attendees: allAttendees,
         }),
       });
 
@@ -176,6 +182,15 @@ export function EventForm({ onSuccess }: EventFormProps) {
           placeholder="e.g., Mike"
           className={inputClasses}
         />
+        <label className="flex items-center gap-2 mt-3 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={hostWantsToVote}
+            onChange={(e) => setHostWantsToVote(e.target.checked)}
+            className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+          />
+          <span className="text-sm text-gray-600">I want to vote too</span>
+        </label>
       </div>
 
       <div>
